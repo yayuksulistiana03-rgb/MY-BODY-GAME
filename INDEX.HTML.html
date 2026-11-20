@@ -1,0 +1,536 @@
+<title>My Body Game</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;800&family=Nunito:wght@500;700;800&display=swap">
+<style>
+/* Layout: one centered play column; sticky scoreboard on top; big chunky buttons.
+   A deliberately single-theme, bright pastel look for children, colours fixed on purpose. */
+:root{
+  --sky:#CFEAFB; --sky-d:#2F7FC8; --sun:#FFE88A; --sun-d:#D99A00;
+  --leaf:#C6EFCC; --leaf-d:#2A9B52; --tang:#FFD3A8; --tang-d:#E26F14;
+  --ink:#23364D; --paper:#FFFDF6; --line:#BFD9EE;
+  --skin:#F7C59F; --skin-d:#C98558;
+  --display:'Baloo 2','Trebuchet MS','Comic Sans MS',system-ui,sans-serif;
+  --body:'Nunito','Trebuchet MS',system-ui,sans-serif;
+  color-scheme:light;
+}
+*{box-sizing:border-box}
+body{background:linear-gradient(180deg,#DDF1FF 0%,#FFF8DD 100%) fixed;background-color:#E9F5FF;color:var(--ink);font-family:var(--body);font-size:17px;line-height:1.45;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:0 40px;min-height:100%}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);background:var(--paper);z-index:10}
+h1,h2,h3{font-family:var(--display);margin:0;line-height:1.1;text-wrap:balance}
+button{font-family:inherit;color:inherit;cursor:pointer}
+button:focus-visible,input:focus-visible{outline:4px solid var(--sky-d);outline-offset:2px}
+.wrap{max-width:980px;margin:0 auto}
+.screen{padding-top:22px}
+
+/* header */
+.hdr{position:sticky;top:env(safe-area-inset-top,0px);z-index:9;background:var(--paper);margin:0 calc(-1*max(16px,env(safe-area-inset-left,0px))) 0 calc(-1*max(16px,env(safe-area-inset-right,0px)));
+  padding:8px max(16px,env(safe-area-inset-right,0px)) 8px max(16px,env(safe-area-inset-left,0px));border-bottom:3px solid var(--line)}
+.hdr-in{max-width:980px;margin:0 auto;display:flex;flex-wrap:wrap;gap:8px 14px;align-items:center;justify-content:space-between}
+.who{font-family:var(--display);font-weight:800;font-size:1.15rem;min-width:0;overflow-wrap:anywhere}
+.pills{display:flex;gap:6px;flex-wrap:wrap}
+.pill{background:var(--sun);border-radius:99px;padding:2px 12px;font-weight:800;font-size:.9rem;font-variant-numeric:tabular-nums;white-space:nowrap}
+.pill:nth-child(2){background:var(--sky)}.pill:nth-child(3){background:var(--leaf)}
+.tools{display:flex;gap:6px}
+.mini{border:3px solid var(--line);background:#fff;border-radius:14px;padding:2px 10px;font-weight:800;font-size:.9rem}
+.mini[aria-pressed="false"]{opacity:.55;text-decoration:line-through}
+
+/* buttons */
+.btn{border:0;border-radius:20px;padding:14px 28px;font-family:var(--display);font-weight:800;font-size:1.3rem;box-shadow:0 6px 0 rgba(0,0,0,.18);transition:transform .08s,box-shadow .08s;color:var(--ink)}
+.btn:active{transform:translateY(5px);box-shadow:0 1px 0 rgba(0,0,0,.18)}
+.btn[disabled]{opacity:.5;cursor:not-allowed}
+.b-sun{background:var(--sun)}.b-leaf{background:var(--leaf)}.b-sky{background:var(--sky)}.b-tang{background:var(--tang)}
+.b-big{font-size:1.6rem;padding:16px 40px}
+.row{display:flex;flex-wrap:wrap;gap:14px;align-items:center}
+.row.c{justify-content:center}
+.back{margin-bottom:14px}
+
+/* home */
+.home{text-align:center;display:flex;flex-direction:column;align-items:center;gap:14px}
+.title{font-size:clamp(3rem,13vw,6.2rem);font-weight:800;letter-spacing:.02em;display:flex;gap:.04em;justify-content:center;flex-wrap:wrap}
+.title span{display:inline-block;animation:bob 2.4s ease-in-out infinite}
+.title span:nth-child(1){color:var(--sky-d)}.title span:nth-child(2){color:var(--tang-d);animation-delay:.15s}
+.title .sp{width:.35em}
+.title span:nth-child(4){color:var(--leaf-d);animation-delay:.3s}.title span:nth-child(5){color:var(--sun-d);animation-delay:.45s}
+.title span:nth-child(6){color:var(--sky-d);animation-delay:.6s}.title span:nth-child(7){color:var(--tang-d);animation-delay:.75s}
+.sub{font-weight:800;font-size:1.15rem;max-width:30ch}
+.stage{width:min(260px,70vw)}
+.kid{animation:bob 2.2s ease-in-out infinite}
+[data-part]{transform-box:fill-box;transform-origin:center}
+.hl{animation:pop .45s ease-in-out infinite alternate;filter:drop-shadow(0 0 7px #FFC400)}
+@keyframes pop{to{transform:scale(1.16)}}
+@keyframes bob{50%{transform:translateY(-8px)}}
+.chips{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;max-width:560px}
+.chip{border:0;border-radius:99px;padding:6px 16px;font-weight:800;font-family:var(--display);font-size:1.05rem}
+.namebox{background:#fff;border:4px solid var(--line);border-radius:24px;padding:16px;display:flex;flex-direction:column;gap:10px;width:min(440px,100%)}
+.namebox label{font-family:var(--display);font-weight:800;font-size:1.2rem}
+.namebox input{font:inherit;font-size:1.3rem;font-weight:700;padding:12px 16px;border-radius:16px;border:3px solid var(--line);width:100%;color:var(--ink);background:#fff}
+.err{color:#B5470A;font-weight:800;min-height:1.4em}
+.shake{animation:shake .4s}
+@keyframes shake{25%{transform:translateX(-8px)}75%{transform:translateX(8px)}}
+
+/* greeting */
+.greet{text-align:center;display:flex;flex-direction:column;align-items:center;gap:18px;padding-top:30px}
+.greet h2{font-size:clamp(2rem,7vw,3.4rem)}
+.greet .nm{color:var(--tang-d);overflow-wrap:anywhere}
+
+/* menu */
+.sec{font-size:1.5rem;margin:22px 0 10px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px}
+.card{border:0;text-align:left;border-radius:24px;padding:18px;display:flex;flex-direction:column;gap:6px;box-shadow:0 6px 0 rgba(0,0,0,.14);min-width:0;transition:transform .1s}
+.card:hover{transform:translateY(-3px)}
+.card:active{transform:translateY(3px)}
+.card .ic{font-size:2rem}
+.card h3{font-size:1.25rem}
+.card small{font-weight:700;opacity:.8}
+.card .st{align-self:flex-start;background:#fff;border-radius:99px;padding:0 12px;font-weight:800;font-size:.85rem}
+.card.done .st{background:var(--leaf-d);color:#fff}
+.card[disabled]{opacity:.6;cursor:not-allowed}
+.c-sky{background:var(--sky)}.c-leaf{background:var(--leaf)}.c-sun{background:var(--sun)}.c-tang{background:var(--tang)}
+
+/* learn */
+.tabs{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px}
+.tab{border:3px solid var(--line);background:#fff;border-radius:16px;padding:8px 18px;font-family:var(--display);font-weight:800;font-size:1.1rem}
+.tab[aria-selected="true"]{background:var(--sun);border-color:var(--sun-d)}
+.vgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:14px}
+.vcard{background:#fff;border:4px solid var(--line);border-radius:24px;padding:14px;text-align:center;display:flex;flex-direction:column;align-items:center;gap:4px}
+.vimg{width:100px;height:100px}.vimg svg{width:100%;height:100%}
+.ven{font-family:var(--display);font-weight:800;font-size:1.8rem}
+.vid{font-weight:800;color:var(--sky-d)}
+.say{border:0;background:var(--leaf);border-radius:14px;padding:6px 14px;font-weight:800;box-shadow:0 4px 0 rgba(0,0,0,.14)}
+.sgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:14px}
+.scard{background:#fff;border:4px solid var(--line);border-radius:24px;padding:16px;display:flex;flex-direction:column;gap:8px;align-items:center;text-align:center}
+.scard .pic{width:min(220px,80%)}.scard .pic svg{width:100%}
+.scard .s-en{font-family:var(--display);font-weight:800;font-size:1.7rem}
+.scard .s-id{font-weight:700;color:var(--sky-d)}
+.note{background:var(--sun);border-radius:18px;padding:12px 16px;font-weight:700;margin-bottom:14px}
+.ccard{background:#fff;border:4px solid var(--line);border-radius:22px;padding:14px 16px;display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap}
+.ccard .t{min-width:0}
+.ccard .s-en{font-family:var(--display);font-weight:800;font-size:1.5rem}
+.ccard .s-id{font-weight:700;color:var(--sky-d)}
+.clist{display:grid;gap:12px}
+
+/* quiz */
+.qhead{display:flex;gap:12px;align-items:center;margin-bottom:12px;font-family:var(--display);font-weight:800;flex-wrap:wrap}
+.bar{flex:1;min-width:120px;height:14px;background:#fff;border:3px solid var(--line);border-radius:99px;overflow:hidden}
+.bar i{display:block;height:100%;background:var(--leaf-d);border-radius:99px;transition:width .3s}
+.qcard{background:#fff;border:4px solid var(--line);border-radius:28px;padding:18px;text-align:center;display:flex;flex-direction:column;align-items:center;gap:10px}
+.qcard .q{font-family:var(--display);font-weight:800;font-size:1.5rem}
+.stim{width:min(200px,60vw)}.stim svg{width:100%;height:auto;display:block}
+.stim.wide{width:min(300px,80vw)}
+.sent{font-family:var(--display);font-weight:800;font-size:clamp(1.6rem,6vw,2.4rem)}
+.blank{display:inline-block;min-width:3.5em;border-bottom:5px dashed var(--tang-d);color:var(--tang-d)}
+.phrase{font-family:var(--display);font-weight:800;font-size:clamp(1.6rem,6vw,2.4rem)}
+.opts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-top:14px}
+.opt{border:4px solid var(--line);background:#fff;border-radius:22px;padding:14px 10px;font-family:var(--display);font-weight:800;font-size:1.35rem;min-height:68px;box-shadow:0 5px 0 rgba(0,0,0,.1);overflow-wrap:anywhere}
+.opt:hover:not([disabled]){background:var(--sky)}
+.opt.pic{padding:8px}.opt.pic svg{width:100%;max-width:130px;height:auto}
+.opt.ok{background:var(--leaf);border-color:var(--leaf-d);animation:hop .5s}
+.opt.no{background:var(--tang);border-color:var(--tang-d);animation:shake .4s}
+.opt.dim{opacity:.55}
+@keyframes hop{40%{transform:scale(1.07)}}
+.fb{margin-top:14px;border-radius:22px;padding:14px 18px;font-family:var(--display);font-weight:800;font-size:1.35rem;display:flex;gap:12px;align-items:center;flex-wrap:wrap;justify-content:space-between;animation:hop .5s}
+.fb.good{background:var(--leaf)}.fb.bad{background:var(--tang)}
+.fb small{display:block;font-family:var(--body);font-size:1rem;font-weight:800}
+.mt{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.col{display:flex;flex-direction:column;gap:10px}
+.mt .opt.pic svg{max-width:90px}
+.opt.sel{background:var(--sun);border-color:var(--sun-d)}
+.hint{font-weight:800;text-align:center}
+.sum{text-align:center;background:#fff;border:4px solid var(--line);border-radius:28px;padding:24px;display:flex;flex-direction:column;align-items:center;gap:12px}
+.sum .big{font-size:4rem}
+
+/* result */
+.res{text-align:center;display:flex;flex-direction:column;align-items:center;gap:14px}
+.res h2{font-size:clamp(2rem,7vw,3.2rem);overflow-wrap:anywhere}
+.stars{font-size:2.6rem;letter-spacing:.1em}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:12px;width:100%}
+.stat{background:#fff;border:4px solid var(--line);border-radius:22px;padding:12px}
+.stat b{display:block;font-family:var(--display);font-size:2.2rem;font-variant-numeric:tabular-nums}
+.stat span{font-weight:800;font-size:.9rem}
+
+/* song */
+.song{display:grid;grid-template-columns:minmax(0,260px) minmax(0,1fr);gap:20px;align-items:center}
+.lyr{background:#fff;border:4px solid var(--line);border-radius:28px;padding:18px;min-height:300px;display:flex;flex-direction:column;gap:8px;justify-content:center}
+.lyr h3{color:var(--tang-d);font-size:1.2rem}
+.ln{font-family:var(--display);font-weight:800;font-size:clamp(1.25rem,4.5vw,1.9rem);opacity:0;transform:translateY(8px);transition:all .35s}
+.ln.on{opacity:.45;transform:none}.ln.cur{opacity:1;color:var(--sky-d)}
+.ln b{color:var(--tang-d);background:var(--sun);border-radius:8px;padding:0 6px}
+.ln.cur b{background:var(--tang)}
+@media(max-width:640px){.song{grid-template-columns:1fr}.song .stage{margin:0 auto}}
+
+#toast{position:fixed;left:50%;bottom:max(20px,env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:#fff;padding:10px 18px;border-radius:16px;font-weight:800;z-index:60;max-width:min(92vw,520px);text-align:center}
+.cf{position:fixed;top:-24px;width:11px;height:15px;z-index:50;pointer-events:none;animation:fall linear forwards}
+@keyframes fall{to{transform:translateY(110vh) rotate(720deg)}}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+
+<div id="hdr" class="hdr" hidden>
+  <div class="hdr-in">
+    <div class="who">👋 <span id="hName"></span></div>
+    <div class="pills"><span class="pill">⭐ <b id="hScore">0</b> pts</span><span class="pill">📝 <b id="hAns">0</b> answered</span><span class="pill">📊 <b id="hPct">0</b>%</span></div>
+    <div class="tools">
+      <button class="mini" data-act="music" aria-pressed="false" title="Background music">🎵 Music</button>
+      <button class="mini" data-act="sound" aria-pressed="true" title="Sound effects">🔊 Sound</button>
+    </div>
+  </div>
+</div>
+
+<div class="wrap">
+
+<!-- HOME -->
+<section id="s-home" class="screen">
+  <div class="home">
+    <h1 class="title" aria-label="MY BODY"><span>M</span><span>Y</span><span class="sp"></span><span>B</span><span>O</span><span>D</span><span>Y</span></h1>
+    <div class="sub">Learn English, Know Your Body, and Have Fun!</div>
+    <div class="stage" id="homeKid"></div>
+    <div class="chips" id="homeChips"></div>
+    <form class="namebox" id="nameForm" autocomplete="off">
+      <label for="nameIn">What is your name? ✍️</label>
+      <input id="nameIn" maxlength="24" placeholder="Write your name here">
+      <div class="err" id="nameErr" role="alert"></div>
+      <button class="btn b-sun b-big" type="submit">START GAME</button>
+    </form>
+    <button class="mini" data-act="music" aria-pressed="false">🎵 Music</button>
+  </div>
+</section>
+
+<!-- GREETING -->
+<section id="s-greet" class="screen" hidden>
+  <div class="greet">
+    <h2>Hello, <span class="nm" id="gName"></span>!<br>Welcome to My Body Game!</h2>
+    <div class="stage" id="greetKid"></div>
+    <button class="btn b-leaf b-big" data-go="menu">LET'S GO!</button>
+  </div>
+</section>
+
+<!-- MENU -->
+<section id="s-menu" class="screen" hidden>
+  <h2 class="sec" style="margin-top:0">📚 Learn First</h2>
+  <div class="grid">
+    <button class="card c-sky" data-learn="vocab"><span class="ic">🧒</span><h3>Vocabulary</h3><small>7 body words with sound</small></button>
+    <button class="card c-leaf" data-learn="sent"><span class="ic">💬</span><h3>Sentences</h3><small>This is… / These are…</small></button>
+    <button class="card c-tang" data-learn="class"><span class="ic">🏫</span><h3>Classroom English</h3><small>5 useful phrases</small></button>
+  </div>
+  <h2 class="sec">🎮 Play Games</h2>
+  <div class="grid" id="gameGrid"></div>
+  <h2 class="sec">🏆 Final Result</h2>
+  <div class="grid"><button class="card c-sun" id="resBtn"><span class="ic">🏆</span><h3>See My Result</h3><small id="resSmall"></small></button></div>
+</section>
+
+<!-- LEARN -->
+<section id="s-learn" class="screen" hidden>
+  <button class="btn b-sky back" data-go="menu">← Menu</button>
+  <div class="tabs" role="tablist">
+    <button class="tab" role="tab" data-tab="vocab">Vocabulary</button>
+    <button class="tab" role="tab" data-tab="sent">Sentences</button>
+    <button class="tab" role="tab" data-tab="class">Classroom English</button>
+    <button class="tab" role="tab" data-tab="song">Song</button>
+  </div>
+  <div id="p-vocab"></div><div id="p-sent" hidden></div><div id="p-class" hidden></div>
+  <div id="p-song" hidden><div class="row"><button class="btn b-tang b-big" data-go="song">🎵 SING WITH US</button></div></div>
+</section>
+
+<!-- GAME -->
+<section id="s-game" class="screen" hidden>
+  <button class="btn b-sky back" data-go="menu">← Menu</button>
+  <h2 id="gTitle" style="margin-bottom:12px"></h2>
+  <div id="gArea"></div>
+</section>
+
+<!-- RESULT -->
+<section id="s-result" class="screen" hidden>
+  <div class="res">
+    <div class="stars" id="rStars"></div>
+    <h2 id="rHead"></h2>
+    <p id="rMsg" style="font-weight:800;font-size:1.2rem;max-width:36ch;margin:0"></p>
+    <div class="stats">
+      <div class="stat"><span>Name</span><b id="rName" style="font-size:1.4rem;overflow-wrap:anywhere"></b></div>
+      <div class="stat"><span>Total score</span><b id="rScore"></b></div>
+      <div class="stat"><span>Correct</span><b id="rOk"></b></div>
+      <div class="stat"><span>Wrong</span><b id="rNo"></b></div>
+      <div class="stat"><span>Result</span><b id="rPct"></b></div>
+    </div>
+    <div class="row c">
+      <button class="btn b-sun b-big" id="rAgain">PLAY AGAIN</button>
+      <button class="btn b-leaf b-big" id="rReview">REVIEW MATERIAL</button>
+    </div>
+    <button class="btn b-tang b-big" data-go="song">🎵 SING WITH US – MY BODY SONG</button>
+  </div>
+</section>
+
+<!-- SONG -->
+<section id="s-song" class="screen" hidden>
+  <button class="btn b-sky back" id="songBack">← Back</button>
+  <h2 style="margin-bottom:14px">🎵 My Body Song</h2>
+  <div class="song">
+    <div class="stage" id="songKid"></div>
+    <div>
+      <div class="lyr" id="lyr" aria-live="polite"></div>
+      <div class="row c" style="margin-top:16px">
+        <button class="btn b-leaf" id="sPlay">▶ PLAY</button>
+        <button class="btn b-sun" id="sPause">⏸ PAUSE</button>
+        <button class="btn b-sky" id="sReplay">↻ REPLAY</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+</div>
+<div id="toast" hidden></div>
+
+<script>
+"use strict";
+const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
+const rnd=a=>a[Math.floor(Math.random()*a.length)];
+const shuf=a=>{a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a};
+const pct=(a,c)=>a?Math.round(c/a*100):0;
+
+/* ---------- ILLUSTRATIONS ---------- */
+const SK='#F7C59F',SD='#B5734A';
+const PARTS={
+head:`<circle cx="50" cy="55" r="34" fill="${SK}" stroke="${SD}" stroke-width="3"/><path d="M17 48Q18 14 50 14Q82 14 83 48Q66 30 50 33Q34 30 17 48Z" fill="#6B4A2F"/><circle cx="38" cy="57" r="4.5" fill="#23364D"/><circle cx="62" cy="57" r="4.5" fill="#23364D"/><path d="M47 64Q50 68 53 64" stroke="${SD}" stroke-width="2.5" fill="none" stroke-linecap="round"/><path d="M39 74Q50 83 61 74" stroke="#C0392B" stroke-width="3.5" fill="none" stroke-linecap="round"/><circle cx="29" cy="67" r="5" fill="#FF9AA2" opacity=".6"/><circle cx="71" cy="67" r="5" fill="#FF9AA2" opacity=".6"/>`,
+eye:`<path d="M8 52Q50 12 92 52Q50 88 8 52Z" fill="#fff" stroke="${SD}" stroke-width="3"/><circle cx="50" cy="52" r="19" fill="#4DA3E0"/><circle cx="50" cy="52" r="9" fill="#23364D"/><circle cx="43" cy="45" r="4.5" fill="#fff"/><path d="M12 38Q50 2 88 38" stroke="#6B4A2F" stroke-width="5" fill="none" stroke-linecap="round"/>`,
+nose:`<path d="M50 12C47 40 38 56 30 66C23 75 32 86 43 82L57 82C68 86 77 75 70 66C62 56 53 40 50 12Z" fill="${SK}" stroke="${SD}" stroke-width="3" stroke-linejoin="round"/><ellipse cx="41" cy="74" rx="4.5" ry="3.2" fill="${SD}"/><ellipse cx="59" cy="74" rx="4.5" ry="3.2" fill="${SD}"/>`,
+mouth:`<path d="M10 46Q30 34 50 43Q70 34 90 46Q72 86 50 86Q28 86 10 46Z" fill="#E0525B" stroke="#A82E3A" stroke-width="3" stroke-linejoin="round"/><path d="M15 49Q50 58 85 49" stroke="#A82E3A" stroke-width="3" fill="none"/><path d="M34 68Q50 78 66 68Q50 61 34 68Z" fill="#FF9AA2"/>`,
+ear:`<path d="M44 10C82 4 92 44 75 62C67 72 65 80 55 88C44 95 33 86 40 76C29 60 18 22 44 10Z" fill="${SK}" stroke="${SD}" stroke-width="3" stroke-linejoin="round"/><path d="M50 28C67 26 71 42 61 52C57 58 53 60 51 67" stroke="${SD}" stroke-width="3" fill="none" stroke-linecap="round"/>`,
+hand:`<g fill="${SK}" stroke="${SD}" stroke-width="3"><rect x="24" y="14" width="12" height="46" rx="6"/><rect x="37" y="6" width="12" height="54" rx="6"/><rect x="50" y="8" width="12" height="52" rx="6"/><rect x="63" y="18" width="12" height="42" rx="6"/><rect x="6" y="50" width="32" height="13" rx="6.5" transform="rotate(-38 22 56)"/><rect x="24" y="44" width="52" height="46" rx="20" stroke="none"/><path d="M24 62V68Q24 90 50 90Q76 90 76 68V62" fill="none"/></g>`,
+leg:`<rect x="34" y="4" width="28" height="66" rx="9" fill="${SK}" stroke="${SD}" stroke-width="3"/><rect x="34" y="50" width="28" height="16" fill="#fff" stroke="${SD}" stroke-width="3"/><path d="M31 66H64Q82 68 86 82Q86 93 77 93H29Q24 93 24 86Q24 70 31 66Z" fill="#F08A2E" stroke="#B8530C" stroke-width="3" stroke-linejoin="round"/>`
+};
+function icon(w,n=1){
+  const p=PARTS[w];
+  if(n===1)return `<svg viewBox="0 0 100 100" role="img" aria-label="${w}">${p}</svg>`;
+  const m=w==='ear'?`<g transform="translate(200 5) scale(-.9 .9)">${p}</g>`:`<g transform="translate(108 5) scale(.9)">${p}</g>`;
+  return `<svg viewBox="0 0 200 100" role="img" aria-label="${w}s"><g transform="translate(0 5) scale(.9)">${p}</g>${m}</svg>`;
+}
+function kid(){return `<svg class="kid" viewBox="0 0 300 400" role="img" aria-label="A cartoon child showing head, eyes, nose, mouth, ears, hands and legs">
+<g stroke="${SD}" stroke-width="4" stroke-linejoin="round" stroke-linecap="round">
+<g data-part="legs"><rect x="112" y="285" width="30" height="78" rx="12" fill="${SK}"/><rect x="158" y="285" width="30" height="78" rx="12" fill="${SK}"/>
+<path d="M104 362H144Q154 364 154 380H100Q98 366 104 362Z" fill="#F08A2E" stroke="#B8530C"/><path d="M156 362H196Q202 366 200 380H146Q146 364 156 362Z" fill="#F08A2E" stroke="#B8530C"/></g>
+<g data-part="hands"><path d="M102 192Q62 215 66 248" fill="none" stroke="${SK}" stroke-width="24"/><path d="M198 192Q238 215 234 248" fill="none" stroke="${SK}" stroke-width="24"/>
+<circle cx="66" cy="258" r="18" fill="${SK}"/><circle cx="234" cy="258" r="18" fill="${SK}"/></g>
+<path d="M100 262H200L196 300H154L150 286L146 300H104Z" fill="#FFD45C" stroke="#D99A00"/>
+<rect x="95" y="172" width="110" height="105" rx="28" fill="#5BB0F0" stroke="#2F7FC8"/>
+<g data-part="ears"><circle cx="78" cy="106" r="16" fill="${SK}"/><circle cx="222" cy="106" r="16" fill="${SK}"/></g>
+<g data-part="head"><circle cx="150" cy="100" r="72" fill="${SK}"/><path d="M80 94Q80 26 150 24Q220 26 220 94Q190 62 150 66Q110 62 80 94Z" fill="#6B4A2F" stroke="#4A3220"/></g>
+<g data-part="eyes" stroke-width="3"><ellipse cx="122" cy="106" rx="14" ry="16" fill="#fff"/><ellipse cx="178" cy="106" rx="14" ry="16" fill="#fff"/><circle cx="124" cy="108" r="8" fill="#23364D" stroke="none"/><circle cx="176" cy="108" r="8" fill="#23364D" stroke="none"/></g>
+<ellipse data-part="nose" cx="150" cy="128" rx="9" ry="7" fill="#E0A279" stroke-width="3"/>
+<path data-part="mouth" d="M124 144Q150 172 176 144Q150 152 124 144Z" fill="#E0525B" stroke="#A82E3A" stroke-width="3"/>
+</g></svg>`}
+function hlParts(root,list){root.querySelectorAll('.hl').forEach(e=>e.classList.remove('hl'));
+  list.forEach(p=>root.querySelectorAll(`[data-part="${p}"]`).forEach(e=>e.classList.add('hl')));}
+
+/* ---------- DATA ---------- */
+const WORDS=[
+ {en:'head',id:'kepala',part:'head'},{en:'eye',id:'mata',part:'eyes'},{en:'nose',id:'hidung',part:'nose'},
+ {en:'mouth',id:'mulut',part:'mouth'},{en:'ear',id:'telinga',part:'ears'},{en:'hand',id:'tangan',part:'hands'},{en:'leg',id:'kaki',part:'legs'}];
+const PL={eye:'eyes',ear:'ears',hand:'hands',leg:'legs'};
+const SENT=[
+ {en:'This is my eye.',id:'Ini mataku.',w:'eye',n:1},{en:'These are my eyes.',id:'Ini mata-mataku (kedua mataku).',w:'eye',n:2},
+ {en:'This is my ear.',id:'Ini telingaku.',w:'ear',n:1},{en:'These are my ears.',id:'Ini telinga-telingaku (kedua telingaku).',w:'ear',n:2}];
+const CLASS=[
+ {en:'Good afternoon, everyone!',id:'Selamat siang, semuanya!'},{en:'Look at the picture!',id:'Lihat gambarnya!'},
+ {en:'Repeat after me.',id:'Ulangi setelah saya.'},{en:'Listen and circle.',id:'Dengarkan dan lingkari.'},{en:'Point and touch.',id:'Tunjuk dan sentuh.'}];
+const EXTRA_ID=['Dengarkan musik!','Buka buku!','Tulislah nama!','Tutup pintu!','Duduklah dengan tenang!','Ambil pensilmu!'];
+const OKMSG=['🎉 Excellent!','😍 Great Job!','⭐ Wonderful!'],NOMSG=['😊 Try Again!','💪 Don\'t Give Up!','🌟 Keep Learning!'];
+
+/* ---------- STATE ---------- */
+const GAMES={
+ g1:{t:'GAME 1 – GUESS THE BODY',ic:'🔍',c:'c-sky',d:'See the picture, pick the word',n:7},
+ g2:{t:'GAME 2 – MATCH THE BODY',ic:'🧩',c:'c-leaf',d:'Match pictures and words',n:7},
+ g3:{t:'GAME 3 – COMPLETE THE SENTENCE',ic:'✏️',c:'c-sun',d:'This is my… / These are…',n:8},
+ g4:{t:'GAME 4 – CLASSROOM ENGLISH CHALLENGE',ic:'🏫',c:'c-tang',d:'Choose the right meaning',n:5},
+ g5:{t:'GAME 5 – LISTEN AND CHOOSE',ic:'🎧',c:'c-sky',d:'Hear a word, tap the picture',n:7}};
+let stats={},player='';
+function resetAll(){Object.keys(GAMES).forEach(k=>stats[k]={answered:0,correct:0,wrong:0,done:false});updHdr()}
+const tot=()=>{const t={answered:0,correct:0,wrong:0};Object.values(stats).forEach(s=>{t.answered+=s.answered;t.correct+=s.correct;t.wrong+=s.wrong});return t};
+function updHdr(){const t=tot();$('#hScore').textContent=t.correct*10;$('#hAns').textContent=t.answered;$('#hPct').textContent=pct(t.answered,t.correct)}
+function record(g,ok){const s=stats[g];s.answered++;ok?s.correct++:s.wrong++;updHdr()}
+resetAll();
+
+/* ---------- AUDIO ---------- */
+let AC=null,sfxOn=true,musicOn=false,musicTouched=false;
+function ac(){if(!AC){const C=window.AudioContext||window.webkitAudioContext;if(C){try{AC=new C()}catch(e){}}}
+  if(AC&&AC.state==='suspended')AC.resume();return AC}
+const hz=m=>440*Math.pow(2,(m-69)/12);
+function tone(m,t,d,type,v,dest){const o=AC.createOscillator(),g=AC.createGain();o.type=type||'triangle';o.frequency.value=hz(m);
+  g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(v||.15,t+.02);g.gain.exponentialRampToValueAtTime(.0001,t+Math.max(d,.06));
+  o.connect(g);g.connect(dest||AC.destination);o.start(t);o.stop(t+Math.max(d,.06)+.05)}
+function sfxOK(){if(!sfxOn||!ac())return;const t=AC.currentTime;[72,76,79,84].forEach((m,i)=>tone(m,t+i*.09,.28,'triangle',.16))}
+function sfxNo(){if(!sfxOn||!ac())return;const t=AC.currentTime;tone(67,t,.25,'sine',.14);tone(62,t+.16,.3,'sine',.12)}
+let voice=null;const hasTTS='speechSynthesis' in window&&typeof SpeechSynthesisUtterance!=='undefined';
+function pickVoice(){if(!hasTTS)return;const v=speechSynthesis.getVoices();voice=v.find(x=>/^en[-_]US/i.test(x.lang))||v.find(x=>/^en/i.test(x.lang))||null}
+if(hasTTS){pickVoice();speechSynthesis.onvoiceschanged=pickVoice}
+function speak(text,rate){
+  if(!hasTTS){toast('🔇 Suara bacaan tidak didukung di browser ini. Baca tulisannya: “'+text+'”');return}
+  try{speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(text);u.lang='en-US';u.rate=rate||.85;u.pitch=1.1;if(voice)u.voice=voice;speechSynthesis.speak(u)}
+  catch(e){toast('🔇 Suara tidak tersedia. Baca: “'+text+'”')}}
+let tt;function toast(m){const t=$('#toast');t.textContent=m;t.hidden=false;clearTimeout(tt);tt=setTimeout(()=>t.hidden=true,3200)}
+
+class Player{
+  constructor(ev,bpm,len,o){this.ev=ev;this.spb=60/bpm;this.len=len;this.o=o||{};this.pos=0;this.playing=false;this.timer=null}
+  start(from){if(!ac())return;if(from===undefined)from=this.pos;this.halt();
+    this.master=AC.createGain();this.master.gain.value=this.o.vol||1;this.master.connect(AC.destination);
+    this.t0=AC.currentTime-from*this.spb;this.idx=this.ev.findIndex(e=>e.b>=from-1e-6);if(this.idx<0)this.idx=this.ev.length;
+    this.playing=true;this.timer=setInterval(()=>this.tick(),40);this.tick()}
+  tick(){const now=AC.currentTime;
+    while(this.idx<this.ev.length&&this.t0+this.ev[this.idx].b*this.spb<now+.3){const e=this.ev[this.idx++];
+      tone(e.m,this.t0+e.b*this.spb,e.d*this.spb*.95,e.w,e.v,this.master)}
+    this.pos=(now-this.t0)/this.spb;
+    if(this.pos>=this.len){if(this.o.loop){this.t0+=this.len*this.spb;this.idx=0;this.pos-=this.len}else{this.halt();this.pos=0;this.o.onEnd&&this.o.onEnd();return}}
+    this.o.onPos&&this.o.onPos(this.pos)}
+  halt(){clearInterval(this.timer);this.playing=false;if(this.master){const m=this.master;m.gain.setTargetAtTime(0,AC.currentTime,.02);setTimeout(()=>{try{m.disconnect()}catch(e){}},250);this.master=null}}
+  pause(){const p=this.pos;this.halt();this.pos=p}
+}
+/* background loop (original) */
+const BGM=[[67,1],[64,.5],[67,.5],[72,1],[67,1],[69,1],[67,.5],[64,.5],[62,2],[64,1],[67,1],[69,1],[67,1],[64,1],[62,1],[60,2]];
+const bgEv=[];{let b=0;BGM.forEach(([m,d])=>{bgEv.push({b,m,d,w:'triangle',v:.10});b+=d});[48,53,55,48].forEach((m,i)=>bgEv.push({b:i*4,m,d:3.5,w:'sine',v:.09}));bgEv.sort((a,c)=>a.b-c.b)}
+const bg=new Player(bgEv,92,16,{loop:true,vol:.7});
+function syncAudioBtns(){$$('[data-act=music]').forEach(b=>b.setAttribute('aria-pressed',musicOn));$$('[data-act=sound]').forEach(b=>b.setAttribute('aria-pressed',sfxOn))}
+function setMusic(on){musicOn=on;if(on&&!inSong)bg.start();else bg.pause();syncAudioBtns()}
+
+/* ---------- SONG (original) ---------- */
+const PAT={A:[[60,1],[64,1],[67,1],[64,1],[65,1],[64,1],[62,2]],B:[[60,1],[64,1],[67,1],[72,1],[69,1],[67,1],[64,2]],
+ C:[[65,1],[69,1],[72,1],[69,1],[67,1],[64,1],[62,2]],D:[[64,1],[62,1],[60,1],[62,1],[64,1],[67,1],[60,2]]};
+const BASS={A:[48,55,48,55],B:[48,55,48,55],C:[53,53,55,55],D:[48,55,48,48]};
+const VERSES=['Verse 1 · My face','Verse 2 · My hands','Verse 3 · My legs','Verse 4 · All together'];
+const LY=[
+ ['Here is my <b>head</b>, here is my <b>nose</b>,',['head','nose']],['Two bright <b>eyes</b>, a <b>mouth</b> that glows,',['eyes','mouth']],
+ ['Two little <b>ears</b> to hear the song,',['ears']],['Hello, hello, sing along!',['head']],
+ ['Two little <b>hands</b> go clap, clap, clap,',['hands']],['Two little <b>hands</b> go tap, tap, tap,',['hands']],
+ ['<b>Hands</b> up high and <b>hands</b> down low,',['hands']],['Wave hello, hello, hello!',['hands']],
+ ['Two strong <b>legs</b> can jump, jump, jump,',['legs']],['Two strong <b>legs</b> go stomp, stomp, stomp,',['legs']],
+ ['<b>Legs</b> can run and <b>legs</b> can hop,',['legs']],['Hop, hop, hop, and then we stop!',['legs']],
+ ['This is my <b>eye</b>, this is my <b>ear</b>,',['eyes','ears']],['These are my <b>hands</b>, my <b>legs</b> are here,',['hands','legs']],
+ ['<b>Head</b>, <b>nose</b>, <b>mouth</b>, hooray!',['head','nose','mouth']],['I know my body, let\'s all say: Hooray!',['head','eyes','nose','mouth','ears','hands','legs']]];
+const songEv=[];LY.forEach((_,i)=>{const k='ABCD'[i%4],b=i*8;let t=b;PAT[k].forEach(([m,d])=>{songEv.push({b:t,m,d,w:'triangle',v:.17});t+=d});
+  BASS[k].forEach((m,j)=>songEv.push({b:b+j*2,m,d:1.8,w:'sine',v:.12}))});songEv.sort((a,c)=>a.b-c.b);
+let curLine=-1,inSong=false,songFrom='menu';
+function showVerse(v){const box=$('#lyr');box.innerHTML=`<h3>${VERSES[v]}</h3>`+LY.slice(v*4,v*4+4).map((l,i)=>`<div class="ln" data-i="${v*4+i}">${l[0]}</div>`).join('')}
+function setLine(i){if(i===curLine)return;curLine=i;
+  if(i<0){showVerse(0);$$('#lyr .ln').forEach(e=>e.classList.remove('on','cur'));hlParts($('#songKid'),[]);return}
+  if(!$('#lyr .ln[data-i="'+i+'"]'))showVerse(Math.floor(i/4));
+  $$('#lyr .ln').forEach(e=>{const n=+e.dataset.i;e.classList.toggle('on',n<=i);e.classList.toggle('cur',n===i)});
+  hlParts($('#songKid'),LY[i][1])}
+const song=new Player(songEv,104,LY.length*8,{onPos:p=>setLine(Math.min(LY.length-1,Math.floor(p/8))),
+  onEnd:()=>{setLine(15);hlParts($('#songKid'),[]);confetti(40);toast('🎉 Great singing!')}});
+function leaveSong(){song.pause();if(hasTTS)speechSynthesis.cancel()}
+
+/* ---------- CONFETTI ---------- */
+function confetti(n){if(matchMedia('(prefers-reduced-motion:reduce)').matches)return;const cols=['#2F7FC8','#E26F14','#2A9B52','#D99A00','#E0525B'];
+  for(let i=0;i<n;i++){const d=document.createElement('i');d.className='cf';d.style.left=Math.random()*100+'vw';d.style.background=rnd(cols);
+    d.style.animationDuration=2.5+Math.random()*2.5+'s';d.style.animationDelay=Math.random()*.8+'s';document.body.appendChild(d);setTimeout(()=>d.remove(),6500)}}
+
+/* ---------- NAVIGATION ---------- */
+function show(id){if(inSong&&id!=='song'){inSong=false;leaveSong();if(musicOn)bg.start()}
+  $$('.screen').forEach(s=>s.hidden=s.id!=='s-'+id);$('#hdr').hidden=id==='home'||id==='greet';window.scrollTo(0,0);
+  if(id==='menu')renderMenu();if(id==='result')renderResult();if(id==='song')openSong()}
+function openSong(){inSong=true;bg.pause();$('#songKid').innerHTML=kid();curLine=-2;setLine(-1)}
+document.addEventListener('click',e=>{
+  const say=e.target.closest('[data-say]');if(say){ac();speak(say.dataset.say,+say.dataset.rate||.85);if(say.dataset.repeat)setTimeout(()=>toast('🗣️ Now your turn! Say it out loud.'),1800);return}
+  const go=e.target.closest('[data-go]');if(go){const t=go.dataset.go;if(t==='song')songFrom=$('#s-result').hidden?'learn':'result';show(t);return}
+  const act=e.target.closest('[data-act]');if(act){ac();if(act.dataset.act==='music'){musicTouched=true;setMusic(!musicOn)}else{sfxOn=!sfxOn;if(!sfxOn&&hasTTS)speechSynthesis.cancel();syncAudioBtns()}}
+});
+
+/* ---------- HOME ---------- */
+$('#homeKid').innerHTML=kid();$('#greetKid').innerHTML=kid();
+$('#homeChips').innerHTML=WORDS.map((w,i)=>{const c=['b-sky','b-sun','b-leaf','b-tang'][i%4];return `<button type="button" class="chip btn ${c}" data-part="${w.part}" style="font-size:1.05rem;padding:6px 16px;box-shadow:0 4px 0 rgba(0,0,0,.14)">${w.part}</button>`}).join('');
+$('#homeChips').addEventListener('click',e=>{const b=e.target.closest('.chip');if(!b)return;ac();hlParts($('#homeKid'),[b.dataset.part]);const w=WORDS.find(x=>x.part===b.dataset.part);speak(w.en,.8);setTimeout(()=>hlParts($('#homeKid'),[]),1600)});
+$('#nameForm').addEventListener('submit',e=>{e.preventDefault();const v=$('#nameIn').value.trim();
+  if(!v){$('#nameErr').textContent='Please write your name first ✍️';$('#nameForm').classList.remove('shake');void $('#nameForm').offsetWidth;$('#nameForm').classList.add('shake');$('#nameIn').focus();return}
+  player=v;ac();$('#hName').textContent=v;$('#gName').textContent=v;resetAll();
+  if(!musicTouched||musicOn)setMusic(true);
+  show('greet');speak('Hello, '+v+'! Welcome to My Body Game!',.9);confetti(30)});
+$('#nameIn').addEventListener('input',()=>$('#nameErr').textContent='');
+
+/* ---------- MENU ---------- */
+function renderMenu(){
+  $('#gameGrid').innerHTML=Object.entries(GAMES).map(([k,g])=>`<button class="card ${g.c} ${stats[k].done?'done':''}" data-game="${k}"><span class="ic">${g.ic}</span><h3>${g.t.replace(/^GAME \d – /,'')}</h3><small>${g.d}</small><span class="st">${stats[k].done?'✓ Done · '+stats[k].correct*10+' pts':'Game '+k[1]}</span></button>`).join('');
+  const n=Object.values(stats).filter(s=>s.done).length;$('#resBtn').disabled=n<5;$('#resSmall').textContent=n<5?`Finish all 5 games (${n}/5 done)`:'All games done! Tap to see it.'}
+$('#gameGrid').addEventListener('click',e=>{const c=e.target.closest('[data-game]');if(c){ac();startGame(c.dataset.game)}});
+$('#resBtn').addEventListener('click',()=>{if(!$('#resBtn').disabled)show('result')});
+$$('[data-learn]').forEach(b=>b.addEventListener('click',()=>{show('learn');tab(b.dataset.learn)}));
+
+/* ---------- LEARN ---------- */
+function tab(n){$$('.tab').forEach(t=>t.setAttribute('aria-selected',t.dataset.tab===n));['vocab','sent','class','song'].forEach(k=>$('#p-'+k).hidden=k!==n)}
+$$('.tab').forEach(t=>t.addEventListener('click',()=>tab(t.dataset.tab)));
+$('#p-vocab').innerHTML=`<div class="vgrid">${WORDS.map(w=>`<div class="vcard"><div class="vimg">${icon(w.en)}</div><div class="ven">${w.en}</div><div class="vid">= ${w.id}</div><button class="say" data-say="${w.en}" aria-label="Listen to ${w.en}">🔊 Listen</button></div>`).join('')}</div>`;
+$('#p-sent').innerHTML=`<div class="note">💡 Use <b>This is</b> for one thing. Use <b>These are</b> for more than one.</div><div class="sgrid">${SENT.map(s=>`<div class="scard"><div class="pic">${icon(s.w,s.n)}</div><div class="s-en">${s.en}</div><div class="s-id">${s.id}</div><div class="row c"><button class="say" data-say="${s.en}">🔊 Listen</button><button class="say" data-say="${s.en}" data-rate=".5">🐢 Slow</button><button class="say" style="background:var(--sun)" data-say="${s.en}" data-repeat="1">🗣️ Repeat</button></div></div>`).join('')}</div>`;
+$('#p-class').innerHTML=`<div class="clist">${CLASS.map(c=>`<div class="ccard"><div class="t"><div class="s-en">${c.en}</div><div class="s-id">${c.id}</div></div><button class="say" data-say="${c.en}">🔊 Listen</button></div>`).join('')}</div>`;
+
+/* ---------- QUIZ ENGINE ---------- */
+const area=$('#gArea');let cur=null;
+function startGame(g){show('game');$('#gTitle').textContent=GAMES[g].t;stats[g]={answered:0,correct:0,wrong:0,done:false};updHdr();
+  ({g1:startG1,g2:startG2,g3:startG3,g4:startG4,g5:startG5})[g](g)}
+function fbBox(ok,extra){return `<div class="fb ${ok?'good':'bad'}" role="status"><div>${ok?rnd(OKMSG):rnd(NOMSG)}${extra?`<small>${extra}</small>`:''}</div></div>`}
+function runQuiz(g,qs){cur={g,qs,i:0};drawQ()}
+function drawQ(){const {g,qs,i}=cur,q=qs[i];
+  area.innerHTML=`<div class="qhead"><span>Question ${i+1} / ${qs.length}</span><div class="bar"><i style="width:${i/qs.length*100}%"></i></div></div>
+  <div class="qcard">${q.stim}</div><div class="opts" id="opts">${q.opts.map((o,k)=>`<button class="opt ${q.pic?'pic':''}" data-k="${k}" ${o.label?`aria-label="${o.label}"`:''}>${o.html}</button>`).join('')}</div><div id="fbArea"></div>`;
+  if(q.auto)setTimeout(()=>{if(cur&&cur.qs===qs&&cur.i===i)speak(q.say,.8)},350)}
+area.addEventListener('click',e=>{if(!cur)return;const b=e.target.closest('.opt[data-k]');if(!b||b.disabled||!$('#opts'))return;
+  const q=cur.qs[cur.i],k=+b.dataset.k,ok=q.opts[k].ok;
+  $$('#opts .opt').forEach((x,j)=>{x.disabled=true;if(q.opts[j].ok)x.classList.add('ok');else if(j===k)x.classList.add('no');else x.classList.add('dim')});
+  record(cur.g,ok);ok?sfxOK():sfxNo();if(ok&&Math.random()<.25)confetti(14);
+  const last=cur.i===cur.qs.length-1;
+  $('#fbArea').innerHTML=fbBox(ok,q.explain).replace('</div></div>',`</div><button class="btn ${ok?'b-sun':'b-sky'}" id="nextQ">${last?'FINISH ✓':'NEXT →'}</button></div>`);
+  if(q.after)setTimeout(()=>speak(q.after,.85),600);
+  $('#nextQ').addEventListener('click',()=>{if(last)endGame(cur.g);else{cur.i++;drawQ()}});$('#nextQ').focus()});
+area.addEventListener('click',e=>{const b=e.target.closest('.say');if(b&&area.contains(b)){/* handled globally */}});
+function endGame(g){stats[g].done=true;updHdr();const s=stats[g];confetti(50);
+  area.innerHTML=`<div class="sum"><div class="big">${s.correct/ (s.answered||1)>=.8?'🏅':'🌟'}</div><h2>Game complete!</h2><p style="font-weight:800;font-size:1.3rem;margin:0">${s.correct} correct · ${s.wrong} wrong · ${s.correct*10} points</p>
+  <div class="row c"><button class="btn b-sun" id="again">PLAY AGAIN</button><button class="btn b-leaf" data-go="menu">MENU</button></div></div>`;
+  $('#again').addEventListener('click',()=>startGame(g));cur=null}
+const sayBtn=(t,rate)=>`<button class="say" data-say="${t}" ${rate?`data-rate="${rate}"`:''}>🔊 Listen</button>`;
+const wordOpts=(correct,pool,fmt)=>shuf([correct,...shuf(pool.filter(x=>x!==correct)).slice(0,3)]).map(x=>({html:fmt(x),ok:x===correct,label:typeof x==='string'?x:x.en}));
+
+function startG1(g){runQuiz(g,shuf(WORDS).map(w=>({stim:`<div class="stim">${icon(w.en)}</div><div class="q">What is it?</div>`,
+  opts:wordOpts(w.en,WORDS.map(x=>x.en),x=>x),explain:`${w.en} = ${w.id}`,after:w.en})))}
+function startG3(g){const sing=shuf(WORDS).slice(0,4).map(w=>({w:w.en,n:1,ans:w.en,pool:WORDS.map(x=>x.en)}));
+  const plur=Object.keys(PL).map(w=>({w,n:2,ans:PL[w],pool:Object.values(PL)}));
+  runQuiz(g,shuf([...sing,...plur]).map(x=>{const lead=x.n===1?'This is my':'These are my',full=`${lead} ${x.ans}.`;
+    return {stim:`<div class="stim ${x.n===2?'wide':''}">${icon(x.w,x.n)}</div><div class="sent">${lead} <span class="blank">&nbsp;?&nbsp;</span></div>`,
+      opts:wordOpts(x.ans,x.pool,t=>t),explain:full,after:full}}))}
+function startG4(g){const all=[...CLASS.map(c=>c.id),...EXTRA_ID];
+  runQuiz(g,shuf(CLASS).map(c=>({stim:`<div class="phrase">“${c.en}”</div>${sayBtn(c.en)}<div class="q">What does it mean?</div>`,
+    opts:wordOpts(c.id,all,t=>t),explain:`${c.en} = ${c.id}`,after:c.en})))}
+function startG5(g){runQuiz(g,shuf(WORDS).map(w=>({pic:true,auto:true,say:w.en,
+  stim:`<div class="q">Listen and choose the picture.</div><button class="btn b-leaf b-big" data-say="${w.en}" data-rate=".75" aria-label="Play the word again">🔊 PLAY SOUND</button>`,
+  opts:wordOpts(w,WORDS,x=>icon(x.en)).map(o=>({...o,ok:o.label===w.en})),explain:`${w.en} = ${w.id}`})))}
+
+/* Game 2: match */
+function startG2(g){const ws=shuf(WORDS);const rounds=[ws.slice(0,4),ws.slice(4)];roundG2(g,rounds,0)}
+function roundG2(g,rounds,r){const set=rounds[r],tried={};let sel=null,done=0;
+  area.innerHTML=`<div class="qhead"><span>Round ${r+1} / 2</span><div class="bar"><i style="width:${r*50}%"></i></div></div>
+  <p class="hint">Tap a picture, then tap its English word.</p>
+  <div class="mt"><div class="col" id="mL">${set.map(w=>`<button class="opt pic" data-w="${w.en}" aria-label="picture ${w.en}">${icon(w.en)}</button>`).join('')}</div>
+  <div class="col" id="mR">${shuf(set).map(w=>`<button class="opt" data-w="${w.en}">${w.en}</button>`).join('')}</div></div><div id="fbArea"></div>`;
+  $('#mL').onclick=e=>{const b=e.target.closest('.opt');if(!b||b.disabled)return;$$('#mL .sel').forEach(x=>x.classList.remove('sel'));b.classList.add('sel');sel=b};
+  $('#mR').onclick=e=>{const b=e.target.closest('.opt');if(!b||b.disabled)return;
+    if(!sel){toast('👆 Tap a picture first!');return}
+    const w=sel.dataset.w;
+    if(b.dataset.w===w){sel.classList.remove('sel');sel.classList.add('ok');b.classList.add('ok');sel.disabled=b.disabled=true;sel=null;done++;
+      if(!tried[w]){tried[w]=1;record(g,true)}sfxOK();speak(w,.85);const w2=set.find(x=>x.en===w);
+      $('#fbArea').innerHTML=fbBox(true,`${w2.en} = ${w2.id}`);
+      if(done===set.length){const last=r===1;$('#fbArea').innerHTML=fbBox(true,'All matched!').replace('</div></div>',`</div><button class="btn b-sun" id="nextR">${last?'FINISH ✓':'NEXT ROUND →'}</button></div>`);
+        $('#nextR').addEventListener('click',()=>last?endGame(g):roundG2(g,rounds,r+1))}}
+    else{if(!tried[w]){tried[w]=1;record(g,false)}sfxNo();b.classList.add('no');setTimeout(()=>b.classList.remove('no'),500);
+      sel.classList.remove('sel');sel=null;$('#fbArea').innerHTML=fbBox(false,'Pick the picture again and try another word.')}}}
+
+/* ---------- RESULT ---------- */
+function renderResult(){const t=tot(),p=pct(t.answered,t.correct);
+  $('#rName').textContent=player;$('#rScore').textContent=t.correct*10;$('#rOk').textContent=t.correct;$('#rNo').textContent=t.wrong;$('#rPct').textContent=p+'%';
+  $('#rHead').textContent=`Congratulations, ${player}!`;
+  $('#rStars').textContent=p>=90?'⭐⭐⭐':p>=70?'⭐⭐☆':'⭐☆☆';
+  $('#rMsg').textContent='You have learned about your body. Keep practicing your English! '+(p>=90?'Excellent work! 🎉':p>=70?'Great job! 👏':'Good try! Review the lesson and play again. 💪');
+  confetti(60)}
+$('#rAgain').addEventListener('click',()=>{resetAll();show('menu')});
+$('#rReview').addEventListener('click',()=>{show('learn');tab('vocab')});
+
+/* ---------- SONG CONTROLS ---------- */
+$('#sPlay').addEventListener('click',()=>{ac();if(!song.playing){if(song.pos===0)setLine(0);song.start()}});
+$('#sPause').addEventListener('click',()=>song.pause());
+$('#sReplay').addEventListener('click',()=>{ac();song.pos=0;curLine=-2;setLine(0);song.start(0)});
+$('#songBack').addEventListener('click',()=>{song.pos=0;show(songFrom)});
+syncAudioBtns();
+</script>
